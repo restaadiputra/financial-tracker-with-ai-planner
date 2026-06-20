@@ -33,6 +33,68 @@ export interface Transaction {
   updatedAt: number;
 }
 
+// Phase 2 financial tables. Each follows the same privacy pattern as transactions
+// (PRD Section 4.4): unencrypted `profileId` for query scoping, everything else in an
+// AES-GCM `encryptedPayload`. Unlike transactions there's no unencrypted `date` index —
+// these are low-volume tables, so we decrypt the whole (profile-scoped) set in memory.
+export interface EncryptedRecord {
+  id: string;
+  profileId: string;
+  iv: string;
+  encryptedPayload: string;
+}
+
+// Decrypted shape of a budget envelope — see PRD Section 5.3.
+export interface Budget {
+  id: string;
+  categoryId: string;
+  amount: number;
+  currency: string;
+  period: 'monthly'; // v1: monthly only — see PRD Section 5.3 SIMPLICITY NOTE.
+  alertThresholdPct: number; // e.g. 80 — overspend warning fires at this % spent.
+  createdAt: number;
+}
+
+// Decrypted shape of a recurring rule (subscriptions / recurring income) — see PRD Section 5.4.
+export interface RecurringRule {
+  id: string;
+  type: 'income' | 'expense';
+  amount: number;
+  currency: string;
+  category: string;
+  note?: string;
+  frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  dayOfMonth?: number; // for monthly/yearly
+  dayOfWeek?: number; // 0 (Sun) – 6 (Sat), for weekly
+  startDate: number;
+  endDate?: number; // open-ended if absent
+  isActive: boolean;
+  lastGeneratedDate?: number;
+}
+
+// Decrypted shape of a savings/debt-payoff goal — see PRD Section 5.5.
+export interface Goal {
+  id: string;
+  name: string;
+  type: 'savings' | 'debt_payoff';
+  targetAmount: number;
+  currentAmount: number; // manual progress; ignored when linkedCategoryId is set.
+  currency: string;
+  targetDate?: number;
+  linkedCategoryId?: string; // optional: auto-derive progress from this category's transactions.
+  createdAt: number;
+}
+
+// Decrypted shape of a manual asset/liability snapshot feeding net worth — see PRD Section 5.6.
+export interface AssetLiabilitySnapshot {
+  id: string;
+  name: string;
+  kind: 'asset' | 'liability';
+  amount: number;
+  currency: string;
+  updatedAt: number;
+}
+
 // Categories are not financial data, so they're stored unencrypted — see PRD Section 5.2.
 export interface CategoryRecord {
   id: string;

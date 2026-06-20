@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Phase 1 (local vault + core transaction tracking) is implemented — see `app/`, `lib/`, and `components/`. Build/lint/test commands:
+Phases 1–2 are implemented — Phase 1 (local vault + core transaction tracking) and Phase 2 (budget envelopes, recurring rules with lazy on-load generation, goals, derived net worth). See `app/`, `lib/`, and `components/`. Build/lint/test commands:
 
 - `npm run dev` / `npm run build` / `npm run start`
 - `npm run lint` — ESLint
