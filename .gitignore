@@ -47,3 +47,5 @@ next-env.d.ts
 
 # design/agent tooling
 .impeccable
+
+certificates
