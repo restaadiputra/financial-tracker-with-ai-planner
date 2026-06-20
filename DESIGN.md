@@ -91,8 +91,8 @@ The implemented system carries through the seed's two-register premise. Day-to-d
 - One color family carries the system: a teal-hued (165°) neutral ramp at near-zero chroma (0.004–0.012) for background/surface/ink/border, plus one teal-green accent at higher chroma (0.12) for action and positive-value signaling
 - Single sans-serif (Inter) at four weights/sizes — no display/body pairing, matching the seed's "no pairing needed" call
 - `tabular-nums` is applied everywhere a currency amount renders (running total, transaction rows, form amount field) — the seed's Tabular Numbers Rule is implemented exactly, not approximated
-- Flat by default; the only surface using shadow is the add/edit-transaction sheet, which is also the only modal-style overlay in the build
-- Dark mode is a first-class second palette (not an afterthought media-query tweak) — every token has a paired dark value at the same hue, restepped lightness
+- Flat by default; shadow is reserved for the one floating overlay primitive (the `Sheet`, used by the transaction form and the profile menu)
+- Light is the default theme, and the theme is user-controlled (Light / Dark / System in the profile menu's Appearance control), persisted to `localStorage` and applied as `data-theme` on `<html>` by a no-FOUC inline script. Dark is a first-class paired palette at the same hue (restepped lightness), never a silent media-query fallback
 
 ## 2. Colors
 
@@ -137,10 +137,10 @@ Each named size below is backed by a real Tailwind v4 theme token (`--text-*` in
 
 ## 4. Elevation
 
-Flat by default, confirmed in the build: the dashboard's running-total card, the transaction-list container, and the profile tiles all use a surface-color step (`surface` vs. `background`) plus a 1px `border` — zero shadow. The single exception is the add/edit-transaction sheet, the only overlay-style component in the app, which uses `shadow-lg` (`0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)`) behind a `backdrop-blur-sm` scrim — exactly the "genuinely floating element" case the seed called out in advance.
+Flat by default, confirmed in the build: the dashboard's running-total card, the transaction-list container, and the profile tiles all use a surface-color step (`surface` vs. `background`) plus a 1px `border` — zero shadow. The single exception is the `Sheet` overlay primitive (used by the transaction form and the profile menu), which uses `shadow-lg` (`0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)`) behind a `backdrop-blur-sm` scrim — exactly the "genuinely floating element" case the seed called out in advance.
 
 ### Shadow Vocabulary
-- **Floating-sheet** (`box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)`): the add/edit-transaction sheet only.
+- **Floating-sheet** (`box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)`): the `Sheet` overlay primitive only.
 
 ### Named Rules
 **The Flat-By-Default Rule.** Confirmed: every static card and panel in the build is flat. Shadow appears exactly once, on the one component that is functionally above the page flow.
@@ -171,11 +171,15 @@ Flat by default, confirmed in the build: the dashboard's running-total card, the
 ### Profile Tile (signature component)
 A 144px-wide selectable card: `rounded.lg`, `surface` background, `border`, with a centered 56px circular avatar badge (`bg-accent`, first-letter initial) above the display name. Hover and focus both swap the border to `accent` — the only hover treatment that changes color rather than opacity in the current build. The "Add profile" tile is the same shape with a dashed border and a `+` glyph instead of an avatar.
 
-### Floating Sheet (Add/Edit Transaction)
-Bottom sheet on mobile (`rounded-t-2xl`, anchored to viewport bottom), centered modal on `sm:` and up (`rounded-2xl`). Scrim is `bg-foreground/20` with `backdrop-blur-sm`. Uses the project's semantic z-index scale (`--z-index-modal: 400`, with `dropdown`, `sticky`, `modal-backdrop`, `toast`, and `tooltip` steps also defined) rather than an arbitrary z-index value.
+### Sheet (overlay primitive — `components/ui/Sheet.tsx`)
+The single responsive overlay every modal and popover uses, so the whole app shares one overlay vocabulary. Rendered in a portal on `document.body` to escape any clipping/stacking context. Mobile-first: **always a bottom sheet on mobile** (full-width, anchored to the viewport bottom, `rounded-t-card`, with a drag-handle affordance), reshaping on `sm:` and up by `variant`:
+- **`modal`** — centers on desktop (`rounded-card`), used by the add/edit-transaction form. The form has a sticky footer so Save/Cancel stay thumb-reachable, and uses `env(safe-area-inset-bottom)` padding.
+- **`menu`** — anchors top-right near its trigger on desktop, used by the profile menu. Its scrim dims the screen on mobile but is a transparent click-away layer on desktop.
 
-### Navigation
-No persistent nav exists yet in Phase 1 (single-screen flows: vault picker → dashboard). Re-document this section once budgets/goals/planner routes introduce real navigation.
+Scrim is `bg-foreground/20` with `backdrop-blur-sm`. Enter/exit are CSS keyframe animations keyed off a `data-state` (`open`/`closed`) attribute, finalized by `onAnimationEnd`; both honor `prefers-reduced-motion`. Includes Escape-to-close, scrim-click-to-close, body-scroll lock, focus-move-in, and focus-restore-on-close. Uses the semantic z-index scale (`--z-index-modal: 400`), never an arbitrary value.
+
+### Navigation / Profile menu (`components/ui/ProfileMenu.tsx`)
+No persistent top/side nav yet (single-screen flows: vault picker → dashboard). The dashboard header carries a **profile menu** trigger (avatar + truncated name + chevron; avatar-only on mobile) that opens a `Sheet` (`menu` variant) holding: the profile identity, the **Appearance** segmented control (Light / Dark / System, with sun/moon/monitor icons), and **Switch profile** (locks the vault, returns to the picker). Re-document once budgets/goals/planner routes introduce real navigation.
 
 ## 6. Do's and Don'ts
 

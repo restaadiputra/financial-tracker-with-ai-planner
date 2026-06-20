@@ -7,6 +7,78 @@ body {
   font-family: var(--font-sans), "Inter", system-ui, sans-serif;
 }
 
+/* ---------------------------------------------------------------------- */
+/* Overlay primitive (components/ui/Sheet.tsx).                           */
+/* One responsive surface for every modal/popover: a bottom sheet on      */
+/* mobile (thumb-reachable, full-width), a centered modal or an anchored   */
+/* popover on >=sm. A `data-state` attribute (open|closed) selects an      */
+/* enter or exit keyframe animation; `forwards` holds the closed frame     */
+/* until onAnimationEnd unmounts the panel.                                */
+/* ---------------------------------------------------------------------- */
+@keyframes sheet-scrim-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes sheet-scrim-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes sheet-in-bottom {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes sheet-out-bottom {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
+}
+
+.sheet-scrim[data-state='open'] {
+  animation: sheet-scrim-in 200ms var(--ease-out-quart) both;
+}
+.sheet-scrim[data-state='closed'] {
+  animation: sheet-scrim-out 200ms var(--ease-out-quart) forwards;
+}
+
+/* Mobile: both variants slide up from the bottom edge. */
+.sheet-panel[data-state='open'] {
+  animation: sheet-in-bottom 260ms var(--ease-out-quart) both;
+}
+.sheet-panel[data-state='closed'] {
+  animation: sheet-out-bottom 240ms var(--ease-out-quart) forwards;
+}
+
+/* >=sm: modal fades/scales in place; menu drops in near its trigger. */
+@media (min-width: 640px) {
+  @keyframes sheet-in-modal {
+    from { opacity: 0; transform: scale(0.97); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes sheet-out-modal {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.97); }
+  }
+  @keyframes sheet-in-menu {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes sheet-out-menu {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-8px); }
+  }
+  .sheet-panel[data-variant='modal'][data-state='open'] {
+    animation: sheet-in-modal 200ms var(--ease-out-quart) both;
+  }
+  .sheet-panel[data-variant='modal'][data-state='closed'] {
+    animation: sheet-out-modal 160ms var(--ease-out-quart) forwards;
+  }
+  .sheet-panel[data-variant='menu'][data-state='open'] {
+    animation: sheet-in-menu 180ms var(--ease-out-quart) both;
+  }
+  .sheet-panel[data-variant='menu'][data-state='closed'] {
+    animation: sheet-out-menu 140ms var(--ease-out-quart) forwards;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

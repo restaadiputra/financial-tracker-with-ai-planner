@@ -37,7 +37,7 @@ export default function VaultPage() {
   }
 
   return (
-    <main className="flex min-h-full flex-1 flex-col items-center justify-center gap-8 px-6 py-16">
+    <main className="flex min-h-full flex-1 flex-col items-center justify-center gap-8 px-4 py-10 sm:px-6 sm:py-16">
       <div className="text-center">
         <h1 className="text-headline">Who&apos;s tracking today?</h1>
         <p className="mt-2 text-muted">Pick a profile to unlock its local vault.</p>
@@ -100,7 +100,7 @@ function UnlockForm({
   }
 
   return (
-    <main className="flex min-h-full flex-1 flex-col items-center justify-center px-6 py-16">
+    <main className="flex min-h-full flex-1 flex-col items-center justify-center px-4 py-10 sm:px-6 sm:py-16">
       <form onSubmit={handleSubmit} className="flex w-full max-w-sm flex-col gap-4">
         <button type="button" onClick={onBack} className="self-start text-label text-muted transition-colors duration-150 ease-out-quart hover:text-foreground active:text-foreground/70">
           &larr; Back
@@ -115,7 +115,7 @@ function UnlockForm({
             autoFocus
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="rounded-control border border-border bg-background px-3 py-2 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="rounded-control border border-border bg-background px-3 py-2.5 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           />
         </label>
 
@@ -124,7 +124,7 @@ function UnlockForm({
         <button
           type="submit"
           disabled={submitting || password.length === 0}
-          className="mt-2 rounded-control bg-accent px-4 py-2 font-medium text-accent-foreground transition-colors duration-150 ease-out-quart hover:bg-accent-hover active:bg-accent-active disabled:pointer-events-none disabled:opacity-50"
+          className="mt-2 rounded-control bg-accent px-4 py-2.5 font-medium text-accent-foreground transition-colors duration-150 ease-out-quart hover:bg-accent-hover active:bg-accent-active disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           {submitting ? 'Unlocking…' : 'Unlock'}
         </button>
@@ -164,7 +164,7 @@ function CreateProfileForm({ onCancel }: { onCancel: () => void }) {
   }
 
   return (
-    <main className="flex min-h-full flex-1 flex-col items-center justify-center px-6 py-16">
+    <main className="flex min-h-full flex-1 flex-col items-center justify-center px-4 py-10 sm:px-6 sm:py-16">
       <form onSubmit={handleSubmit} className="flex w-full max-w-sm flex-col gap-4">
         <button type="button" onClick={onCancel} className="self-start text-label text-muted transition-colors duration-150 ease-out-quart hover:text-foreground active:text-foreground/70">
           &larr; Back
@@ -184,7 +184,7 @@ function CreateProfileForm({ onCancel }: { onCancel: () => void }) {
             required
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            className="rounded-control border border-border bg-background px-3 py-2 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="rounded-control border border-border bg-background px-3 py-2.5 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           />
         </label>
 
@@ -195,7 +195,7 @@ function CreateProfileForm({ onCancel }: { onCancel: () => void }) {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="rounded-control border border-border bg-background px-3 py-2 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="rounded-control border border-border bg-background px-3 py-2.5 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           />
         </label>
 
@@ -206,7 +206,7 @@ function CreateProfileForm({ onCancel }: { onCancel: () => void }) {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="rounded-control border border-border bg-background px-3 py-2 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="rounded-control border border-border bg-background px-3 py-2.5 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           />
         </label>
 
@@ -217,7 +217,7 @@ function CreateProfileForm({ onCancel }: { onCancel: () => void }) {
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="rounded-control border border-border bg-background px-3 py-2 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="rounded-control border border-border bg-background px-3 py-2.5 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           />
         </label>
 
@@ -226,7 +226,7 @@ function CreateProfileForm({ onCancel }: { onCancel: () => void }) {
         <button
           type="submit"
           disabled={submitting}
-          className="mt-2 rounded-control bg-accent px-4 py-2 font-medium text-accent-foreground transition-colors duration-150 ease-out-quart hover:bg-accent-hover active:bg-accent-active disabled:pointer-events-none disabled:opacity-50"
+          className="mt-2 rounded-control bg-accent px-4 py-2.5 font-medium text-accent-foreground transition-colors duration-150 ease-out-quart hover:bg-accent-hover active:bg-accent-active disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           {submitting ? 'Creating…' : 'Create profile'}
         </button>
