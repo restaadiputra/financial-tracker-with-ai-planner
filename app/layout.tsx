@@ -4,7 +4,7 @@ import "./globals.css";
 import { VaultProvider } from "@/lib/vault/VaultContext";
 
 const inter = Inter({
-  variable: "--font-geist-sans",
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 

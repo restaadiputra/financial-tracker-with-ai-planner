@@ -34,6 +34,14 @@ export default function DashboardPage() {
     return Array.from(totals.entries());
   }, [transactions]);
 
+  const categoryNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const c of categories ?? []) {
+      map.set(c.id, c.name);
+    }
+    return map;
+  }, [categories]);
+
   useEffect(() => {
     if (!activeProfile || !vaultKey) {
       router.replace('/');
@@ -63,23 +71,26 @@ export default function DashboardPage() {
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-6 py-12">
       <header className="flex items-center justify-between">
         <div>
-          <p className="text-sm text-muted">Welcome back</p>
-          <h1 className="text-2xl font-semibold tracking-tight">{activeProfile.displayName}</h1>
+          <p className="text-label text-muted">Welcome back</p>
+          <h1 className="text-title tracking-tight">{activeProfile.displayName}</h1>
         </div>
-        <button onClick={lock} className="text-sm text-muted hover:text-foreground">
+        <button
+          onClick={lock}
+          className="text-label text-muted transition-colors duration-150 ease-out-quart hover:text-foreground active:text-foreground/70"
+        >
           Switch profile
         </button>
       </header>
 
-      <section className="rounded-2xl border border-border bg-surface p-6">
-        <h2 className="text-sm font-medium text-muted">Running total</h2>
-        <p className="mt-1 text-xs text-muted">Totals shown per currency &mdash; no automatic conversion.</p>
+      <section className="rounded-card border border-border bg-surface p-6">
+        <h2 className="text-label text-muted">Running total</h2>
+        <p className="mt-1 text-micro-label text-muted">Totals shown per currency &mdash; no automatic conversion.</p>
         <div className="mt-4 flex flex-wrap gap-6">
           {totalsByCurrency.length === 0 && <p className="text-muted">No transactions yet.</p>}
           {totalsByCurrency.map(([currency, total]) => (
             <div key={currency}>
-              <p className="text-xs uppercase tracking-wide text-muted">Total {currency}</p>
-              <p className="text-2xl font-semibold tabular-nums">
+              <p className="text-micro-label uppercase tracking-wide text-muted">Total {currency}</p>
+              <p className="text-amount tabular-nums">
                 {total < 0 ? '-' : ''}
                 {currency} {Math.abs(total).toLocaleString()}
               </p>
@@ -90,27 +101,27 @@ export default function DashboardPage() {
 
       <section className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Transactions</h2>
+          <h2 className="text-title">Transactions</h2>
           <button
             onClick={() => setFormOpen(true)}
-            className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground"
+            className="rounded-control bg-accent px-3 py-1.5 text-label text-accent-foreground transition-colors duration-150 ease-out-quart hover:bg-accent-hover active:bg-accent-active"
           >
             Add transaction
           </button>
         </div>
 
         {(transactions ?? []).length === 0 && (
-          <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-muted">
+          <p className="rounded-callout border border-dashed border-border px-4 py-8 text-center text-muted">
             No transactions yet. Add your first one above.
           </p>
         )}
 
-        <ul className="flex flex-col divide-y divide-border rounded-2xl border border-border bg-surface">
+        <ul className="flex flex-col divide-y divide-border rounded-card border border-border bg-surface">
           {(transactions ?? []).map((t) => (
             <li key={t.id} className="flex items-center justify-between gap-4 px-4 py-3">
               <div>
-                <p className="font-medium">{categories?.find((c) => c.id === t.category)?.name ?? t.category}</p>
-                <p className="text-sm text-muted">
+                <p className="font-medium">{categoryNameById.get(t.category) ?? t.category}</p>
+                <p className="text-label text-muted">
                   {new Date(t.date).toLocaleDateString()} {t.note ? `· ${t.note}` : ''}
                 </p>
               </div>
@@ -119,10 +130,16 @@ export default function DashboardPage() {
                   {t.type === 'income' ? '+' : '-'}
                   {t.currency} {t.amount.toLocaleString()}
                 </p>
-                <button onClick={() => setEditing(t)} className="text-sm text-muted hover:text-foreground">
+                <button
+                  onClick={() => setEditing(t)}
+                  className="text-label text-muted transition-colors duration-150 ease-out-quart hover:text-foreground active:text-foreground/70"
+                >
                   Edit
                 </button>
-                <button onClick={() => handleDelete(t.id)} className="text-sm text-muted hover:text-danger">
+                <button
+                  onClick={() => handleDelete(t.id)}
+                  className="text-label text-muted transition-colors duration-150 ease-out-quart hover:text-danger active:text-danger/70"
+                >
                   Delete
                 </button>
               </div>

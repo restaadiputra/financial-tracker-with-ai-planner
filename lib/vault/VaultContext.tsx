@@ -32,10 +32,14 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     setVaultKey(null);
   }, []);
 
-  const timerRef = useRef(createInactivityTimer(SESSION_TIMEOUT_MS, lock));
+  const timerRef = useRef<ReturnType<typeof createInactivityTimer> | null>(null);
+  if (timerRef.current === null) {
+    timerRef.current = createInactivityTimer(SESSION_TIMEOUT_MS, lock);
+  }
 
   useEffect(() => {
-    const timer = timerRef.current;
+    // Always set during render above, before this effect can run.
+    const timer = timerRef.current!;
 
     if (!activeProfile) {
       timer.clear();

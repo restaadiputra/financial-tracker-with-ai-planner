@@ -62,9 +62,9 @@ export function TransactionForm({
     <div className="fixed inset-0 z-modal flex items-end justify-center bg-foreground/20 backdrop-blur-sm sm:items-center">
       <form
         onSubmit={handleSubmit}
-        className="flex w-full max-w-sm flex-col gap-4 rounded-t-2xl border border-border bg-background p-6 shadow-lg sm:rounded-2xl"
+        className="flex w-full max-w-sm flex-col gap-4 rounded-t-card border border-border bg-background p-6 shadow-lg sm:rounded-card"
       >
-        <h2 className="text-lg font-semibold">{initialValues ? 'Edit transaction' : 'Add transaction'}</h2>
+        <h2 className="text-title">{initialValues ? 'Edit transaction' : 'Add transaction'}</h2>
 
         <div className="flex gap-2">
           {(['expense', 'income'] as const).map((t) => (
@@ -72,8 +72,10 @@ export function TransactionForm({
               key={t}
               type="button"
               onClick={() => setType(t)}
-              className={`flex-1 rounded-lg border px-3 py-1.5 text-sm font-medium capitalize transition ${
-                type === t ? 'border-accent bg-accent text-accent-foreground' : 'border-border text-muted'
+              className={`flex-1 rounded-control border px-3 py-1.5 text-label capitalize transition-colors duration-150 ease-out-quart ${
+                type === t
+                  ? 'border-accent bg-accent text-accent-foreground hover:bg-accent-hover active:bg-accent-active'
+                  : 'border-border text-muted hover:border-accent hover:text-foreground active:bg-surface-hover'
               }`}
             >
               {t}
@@ -82,35 +84,35 @@ export function TransactionForm({
         </div>
 
         <div className="flex gap-2">
-          <label className="flex flex-1 flex-col gap-1 text-sm font-medium">
+          <label className="flex flex-1 flex-col gap-1 text-label">
             Amount
             <input
               required
               inputMode="decimal"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="rounded-lg border border-border bg-background px-3 py-2 text-base tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className="rounded-control border border-border bg-background px-3 py-2 text-body tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             />
           </label>
-          <label className="flex w-24 flex-col gap-1 text-sm font-medium">
+          <label className="flex w-24 flex-col gap-1 text-label">
             Currency
             <input
               required
               value={currency}
               onChange={(e) => setCurrency(e.target.value.toUpperCase())}
               maxLength={3}
-              className="rounded-lg border border-border bg-background px-3 py-2 text-base uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className="rounded-control border border-border bg-background px-3 py-2 text-body uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             />
           </label>
         </div>
 
-        <label className="flex flex-col gap-1 text-sm font-medium">
+        <label className="flex flex-col gap-1 text-label">
           Category
           <select
             required
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="rounded-lg border border-border bg-background px-3 py-2 text-base focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="rounded-control border border-border bg-background px-3 py-2 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             {relevantCategories.map((c) => (
               <option key={c.id} value={c.id}>
@@ -120,40 +122,40 @@ export function TransactionForm({
           </select>
         </label>
 
-        <label className="flex flex-col gap-1 text-sm font-medium">
+        <label className="flex flex-col gap-1 text-label">
           Date
           <input
             required
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="rounded-lg border border-border bg-background px-3 py-2 text-base focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="rounded-control border border-border bg-background px-3 py-2 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           />
         </label>
 
-        <label className="flex flex-col gap-1 text-sm font-medium">
+        <label className="flex flex-col gap-1 text-label">
           Note (optional)
           <input
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            className="rounded-lg border border-border bg-background px-3 py-2 text-base focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="rounded-control border border-border bg-background px-3 py-2 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           />
         </label>
 
-        {error && <p className="text-sm text-danger">{error}</p>}
+        {error && <p className="text-label text-danger">{error}</p>}
 
         <div className="mt-2 flex gap-2">
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 rounded-lg border border-border px-4 py-2 font-medium text-muted"
+            className="flex-1 rounded-control border border-border px-4 py-2 font-medium text-muted transition-colors duration-150 ease-out-quart hover:border-accent hover:text-foreground active:bg-surface-hover"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="flex-1 rounded-lg bg-accent px-4 py-2 font-medium text-accent-foreground disabled:opacity-50"
+            className="flex-1 rounded-control bg-accent px-4 py-2 font-medium text-accent-foreground transition-colors duration-150 ease-out-quart hover:bg-accent-hover active:bg-accent-active disabled:pointer-events-none disabled:opacity-50"
           >
             {submitting ? 'Saving…' : 'Save'}
           </button>

@@ -39,7 +39,7 @@ export default function VaultPage() {
   return (
     <main className="flex min-h-full flex-1 flex-col items-center justify-center gap-8 px-6 py-16">
       <div className="text-center">
-        <h1 className="text-3xl font-semibold tracking-tight">Who&apos;s tracking today?</h1>
+        <h1 className="text-headline">Who&apos;s tracking today?</h1>
         <p className="mt-2 text-muted">Pick a profile to unlock its local vault.</p>
       </div>
 
@@ -48,7 +48,7 @@ export default function VaultPage() {
           <button
             key={profile.id}
             onClick={() => setSelectedProfile(profile)}
-            className="flex w-36 flex-col items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-6 text-center transition hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="flex w-36 flex-col items-center gap-3 rounded-card border border-border bg-surface px-4 py-6 text-center transition-colors duration-150 ease-out-quart hover:border-accent active:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-accent text-xl font-semibold text-accent-foreground">
               {profile.displayName.slice(0, 1).toUpperCase()}
@@ -59,7 +59,7 @@ export default function VaultPage() {
 
         <button
           onClick={() => setCreating(true)}
-          className="flex w-36 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border px-4 py-6 text-center text-muted transition hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          className="flex w-36 flex-col items-center justify-center gap-3 rounded-card border border-dashed border-border px-4 py-6 text-center text-muted transition-colors duration-150 ease-out-quart hover:border-accent hover:text-accent active:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           <span className="flex h-14 w-14 items-center justify-center rounded-full border border-current text-2xl">+</span>
           <span className="font-medium">Add profile</span>
@@ -102,29 +102,29 @@ function UnlockForm({
   return (
     <main className="flex min-h-full flex-1 flex-col items-center justify-center px-6 py-16">
       <form onSubmit={handleSubmit} className="flex w-full max-w-sm flex-col gap-4">
-        <button type="button" onClick={onBack} className="self-start text-sm text-muted hover:text-foreground">
+        <button type="button" onClick={onBack} className="self-start text-label text-muted transition-colors duration-150 ease-out-quart hover:text-foreground active:text-foreground/70">
           &larr; Back
         </button>
 
-        <h1 className="text-2xl font-semibold">Unlock {profile.displayName}&apos;s vault</h1>
+        <h1 className="text-title">Unlock {profile.displayName}&apos;s vault</h1>
 
-        <label className="flex flex-col gap-1 text-sm font-medium">
+        <label className="flex flex-col gap-1 text-label">
           Password
           <input
             type="password"
             autoFocus
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="rounded-lg border border-border bg-background px-3 py-2 text-base focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="rounded-control border border-border bg-background px-3 py-2 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           />
         </label>
 
-        {error && <p className="text-sm text-danger">{error}</p>}
+        {error && <p className="text-label text-danger">{error}</p>}
 
         <button
           type="submit"
           disabled={submitting || password.length === 0}
-          className="mt-2 rounded-lg bg-accent px-4 py-2 font-medium text-accent-foreground transition disabled:opacity-50"
+          className="mt-2 rounded-control bg-accent px-4 py-2 font-medium text-accent-foreground transition-colors duration-150 ease-out-quart hover:bg-accent-hover active:bg-accent-active disabled:pointer-events-none disabled:opacity-50"
         >
           {submitting ? 'Unlocking…' : 'Unlock'}
         </button>
@@ -166,67 +166,67 @@ function CreateProfileForm({ onCancel }: { onCancel: () => void }) {
   return (
     <main className="flex min-h-full flex-1 flex-col items-center justify-center px-6 py-16">
       <form onSubmit={handleSubmit} className="flex w-full max-w-sm flex-col gap-4">
-        <button type="button" onClick={onCancel} className="self-start text-sm text-muted hover:text-foreground">
+        <button type="button" onClick={onCancel} className="self-start text-label text-muted transition-colors duration-150 ease-out-quart hover:text-foreground active:text-foreground/70">
           &larr; Back
         </button>
 
-        <h1 className="text-2xl font-semibold">Create a profile</h1>
+        <h1 className="text-title">Create a profile</h1>
 
-        <p className="rounded-xl border border-border bg-surface px-4 py-3 text-sm text-muted">
+        <p className="rounded-callout border border-border bg-surface px-4 py-3 text-label text-muted">
           This protects your data on this device. We don&apos;t store your password anywhere, and we
           can&apos;t reset it for you. If you forget it, your local data can&apos;t be recovered unless
           you&apos;ve made a backup.
         </p>
 
-        <label className="flex flex-col gap-1 text-sm font-medium">
+        <label className="flex flex-col gap-1 text-label">
           Display name
           <input
             required
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            className="rounded-lg border border-border bg-background px-3 py-2 text-base focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="rounded-control border border-border bg-background px-3 py-2 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           />
         </label>
 
-        <label className="flex flex-col gap-1 text-sm font-medium">
+        <label className="flex flex-col gap-1 text-label">
           Email
           <input
             required
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="rounded-lg border border-border bg-background px-3 py-2 text-base focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="rounded-control border border-border bg-background px-3 py-2 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           />
         </label>
 
-        <label className="flex flex-col gap-1 text-sm font-medium">
+        <label className="flex flex-col gap-1 text-label">
           Password
           <input
             required
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="rounded-lg border border-border bg-background px-3 py-2 text-base focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="rounded-control border border-border bg-background px-3 py-2 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           />
         </label>
 
-        <label className="flex flex-col gap-1 text-sm font-medium">
+        <label className="flex flex-col gap-1 text-label">
           Confirm password
           <input
             required
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="rounded-lg border border-border bg-background px-3 py-2 text-base focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="rounded-control border border-border bg-background px-3 py-2 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           />
         </label>
 
-        {error && <p className="text-sm text-danger">{error}</p>}
+        {error && <p className="text-label text-danger">{error}</p>}
 
         <button
           type="submit"
           disabled={submitting}
-          className="mt-2 rounded-lg bg-accent px-4 py-2 font-medium text-accent-foreground transition disabled:opacity-50"
+          className="mt-2 rounded-control bg-accent px-4 py-2 font-medium text-accent-foreground transition-colors duration-150 ease-out-quart hover:bg-accent-hover active:bg-accent-active disabled:pointer-events-none disabled:opacity-50"
         >
           {submitting ? 'Creating…' : 'Create profile'}
         </button>

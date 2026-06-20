@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Financial Tracker with AI Planner
 
-## Getting Started
+A local-first personal finance tracker. Phase 1 ships an encrypted local vault and core transaction tracking — no AI planner, budgets, or goals yet (see [Roadmap](#roadmap)).
 
-First, run the development server:
+**Core principle: your financial data never touches a server.** Everything lives in the browser, encrypted at rest in IndexedDB via [Dexie.js](https://dexie.org/). "Logging in" unlocks a local vault (PBKDF2-SHA256 key derivation + AES-GCM 256-bit encryption via the Web Crypto API) — there is no backend, no account, and no password recovery, by design.
+
+## What's implemented (Phase 1)
+
+- **Local vault**: multi-profile picker, profile creation, and unlock flow. Each profile derives its own AES-GCM key from a password via PBKDF2; a small encrypted "verifier" string confirms the password is correct without ever storing it.
+- **Transaction CRUD**: add, edit, delete, and list income/expense transactions, each encrypted individually before being written to IndexedDB (only `profileId` and `date` are stored unencrypted, to support Dexie queries/sorting without decrypting every record).
+- **Dashboard**: a transaction list with a running total, scoped to the unlocked profile.
+- **Session handling**: the derived vault key lives only in React context for the session (never persisted to storage) and the vault auto-locks after inactivity.
+
+## Stack
+
+- [Next.js 16](https://nextjs.org) (App Router) + TypeScript (strict)
+- [Tailwind CSS v4](https://tailwindcss.com)
+- [Dexie.js](https://dexie.org/) (IndexedDB wrapper)
+- [Vitest](https://vitest.dev) for unit tests, [fake-indexeddb](https://github.com/dumbmatter/fakeIndexedDB) for DB tests
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). The app works entirely client-side — no environment variables are required for Phase 1.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Script | What it does |
+| --- | --- |
+| `npm run dev` | Start the dev server |
+| `npm run build` | Production build |
+| `npm run start` | Run the production build |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm test` | Run the Vitest suite once |
+| `npm run test:watch` | Run Vitest in watch mode |
 
-## Learn More
+## Documentation
 
-To learn more about Next.js, take a look at the following resources:
+- [`docs/finance-tracker-prd.md`](docs/finance-tracker-prd.md) — the full product spec: data models, encryption design, and the phase-by-phase build plan.
+- [`PRODUCT.md`](PRODUCT.md) — product register, target users, brand personality.
+- [`DESIGN.md`](DESIGN.md) — the design system (colors, typography, components) as actually implemented.
+- [`CLAUDE.md`](CLAUDE.md) — architecture notes and core principles for anyone (human or AI) working on this codebase.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Roadmap
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Per the PRD, later phases (not yet built) add: budgets, recurring transactions, and goals (Phase 2); an AI planner chat backed by the Anthropic API (Phase 3); receipt scanning via AI extraction (Phase 4); manual JSON backup/restore (Phase 5); and an optional paid tier with encrypted Supabase cloud backup (Phase 6+). Phases 1–5 have zero server/cloud dependency by design.

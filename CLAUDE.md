@@ -4,7 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-This repository currently contains only the product spec (`docs/finance-tracker-prd.md`) — no application code has been written yet. There is no package.json, build tooling, or test suite to reference. When code is added, update this file with actual build/lint/test commands.
+Phase 1 (local vault + core transaction tracking) is implemented — see `app/`, `lib/`, and `components/`. Build/lint/test commands:
+
+- `npm run dev` / `npm run build` / `npm run start`
+- `npm run lint` — ESLint
+- `npm run typecheck` — `tsc --noEmit`
+- `npm test` — Vitest (unit tests for `lib/crypto`, `lib/db`, `lib/vault`)
+
+No environment variables are required yet. Phase 3 (AI planner) will need `ANTHROPIC_API_KEY`; Phase 6 (cloud backup) will need Supabase keys — none of that exists yet, do not add API routes or env var reads until those phases start.
 
 ## What this project is
 
@@ -68,7 +75,7 @@ No bank account linking, no multi-device real-time sync, no server-side analytic
 
 ## Design Context
 
-Full strategic and visual specs live in `PRODUCT.md` (register, users, brand personality, anti-references) and `DESIGN.md` (seed — colors, typography, motion; re-run `/impeccable document` once components exist). Register is **product** (app UI, not marketing). Key principles:
+Full strategic and visual specs live in `PRODUCT.md` (register, users, brand personality, anti-references) and `DESIGN.md` (resolved against real Phase 1 code — colors, typography, components, tokens in `app/tokens.css`). Register is **product** (app UI, not marketing). Key principles:
 
 - Vault/security copy (profile creation, unlock, backup) is plain-spoken and reassuring, never legal-disclaimer tone; everyday tracking screens (dashboard, budgets, goals, planner) are warmer and more encouraging.
 - Every AI-proposed plan, budget adjustment, or receipt extraction needs a visible confirm step before it's treated as saved — never auto-write AI output to financial records.

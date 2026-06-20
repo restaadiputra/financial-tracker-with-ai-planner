@@ -1,0 +1,144 @@
+/*
+ * Design tokens — single source of truth for the project's Tailwind v4
+ * theme. Tailwind v4 is CSS-first: there is no tailwind.config.js. Instead,
+ * every custom design value is declared here as a CSS variable and exposed
+ * to Tailwind via `@theme inline`, which turns each key into a matching
+ * utility class, e.g.:
+ *   --color-accent       -> bg-accent / text-accent / border-accent
+ *   --text-headline       -> text-headline (font-size + line-height + weight + tracking)
+ *   --radius-control       -> rounded-control
+ *   --z-index-modal        -> z-modal
+ *   --ease-out-quart       -> ease-out-quart
+ *
+ * Canonical documentation for these tokens (colors, typography hierarchy,
+ * rounded scale, spacing scale, z-index scale, motion) lives in DESIGN.md
+ * and .impeccable/design.json — keep those in sync if tokens are added or
+ * renamed here.
+ */
+
+/* ---------------------------------------------------------------------- */
+/* Color roles — light mode (default). See "Colors" in DESIGN.md.        */
+/* ---------------------------------------------------------------------- */
+:root {
+  --background: oklch(98% 0.004 165);
+  --surface: oklch(96% 0.006 165);
+  --surface-hover: oklch(93% 0.007 165);
+  --foreground: oklch(22% 0.012 165);
+  --muted: oklch(46% 0.012 165);
+  --border: oklch(89% 0.008 165);
+  --accent: oklch(55% 0.12 165);
+  --accent-hover: oklch(48% 0.12 165);
+  --accent-active: oklch(42% 0.12 165);
+  --accent-foreground: oklch(99% 0.004 165);
+  --danger: oklch(55% 0.18 25);
+  --danger-foreground: oklch(99% 0.004 25);
+}
+
+/* Color roles — dark mode overrides (same hue family, restepped lightness) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: oklch(17% 0.01 165);
+    --surface: oklch(21% 0.012 165);
+    --surface-hover: oklch(25% 0.013 165);
+    --foreground: oklch(95% 0.008 165);
+    --muted: oklch(70% 0.012 165);
+    --border: oklch(30% 0.014 165);
+    --accent: oklch(68% 0.13 165);
+    --accent-hover: oklch(74% 0.13 165);
+    --accent-active: oklch(79% 0.13 165);
+    --accent-foreground: oklch(15% 0.01 165);
+    --danger: oklch(62% 0.17 25);
+    --danger-foreground: oklch(15% 0.01 25);
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Tailwind v4 theme — maps the variables above (and other scales) to     */
+/* utility classes. Grouped by category per DESIGN.md.                    */
+/* ---------------------------------------------------------------------- */
+@theme inline {
+  /* Colors — see "Colors" in DESIGN.md (Restrained Rule / Tinted-Neutral Rule) */
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-active: var(--accent-active);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+
+  /* Font family */
+  --font-sans: var(--font-inter);
+
+  /* Typography hierarchy — see "Typography" in DESIGN.md. Each named size
+     here intentionally matches an existing Tailwind default size value
+     (3xl/2xl/base/sm/xs), so adopting these utilities is purely semantic
+     and changes no rendered output:
+       headline    -> 1.875rem (matches text-3xl)  — the vault picker H1 only
+       title       -> 1.5rem   (matches text-2xl)  — page/sheet headings
+       amount      -> 1.5rem   (matches text-2xl)  — currency figures only
+       body        -> 1rem     (matches text-base) — form inputs/selects
+       label       -> 0.875rem (matches text-sm)   — field labels, muted text, buttons
+       micro-label -> 0.75rem  (matches text-xs)   — the uppercase "TOTAL IDR" caption */
+  --text-headline: 1.875rem;
+  --text-headline--line-height: 1.2;
+  --text-headline--letter-spacing: -0.01em;
+  --text-headline--font-weight: 600;
+
+  --text-title: 1.5rem;
+  --text-title--line-height: 1.25;
+  --text-title--font-weight: 600;
+
+  --text-amount: 1.5rem;
+  --text-amount--font-weight: 600;
+
+  --text-body: 1rem;
+  --text-body--line-height: 1.5;
+  --text-body--font-weight: 400;
+
+  --text-label: 0.875rem;
+  --text-label--line-height: 1.4;
+  --text-label--font-weight: 500;
+
+  --text-micro-label: 0.75rem;
+  --text-micro-label--line-height: 1.4;
+  --text-micro-label--font-weight: 500;
+
+  /* Radius — see "Cards / Containers" + "Buttons" in DESIGN.md. Named to
+     avoid colliding with Tailwind's own --radius-sm/md/lg defaults (which
+     are 4/6/8px and already used elsewhere by convention); these map to
+     DESIGN.md's rounded.sm/md/lg (8/12/16px), matching what the codebase
+     already renders via rounded-lg/rounded-xl/rounded-2xl respectively:
+       --radius-control (8px)  -> rounded-control  (buttons, inputs, toggle)
+       --radius-callout (12px) -> rounded-callout  (the onboarding callout)
+       --radius-card    (16px) -> rounded-card     (cards, profile tile, sheet) */
+  --radius-control: 8px;
+  --radius-callout: 12px;
+  --radius-card: 16px;
+
+  /* Spacing scale — see "Components" block in DESIGN.md (sm/md/lg/xl =
+     8/16/24/48px). Tailwind v4 derives all spacing utilities (p-*, gap-*,
+     px-*, etc.) from a single --spacing multiplier (0.25rem = 4px) rather
+     than named slots, so these values are already reachable via the
+     existing numeric utilities without a separate token:
+       sm (8px)  = gap-2 / p-2 / py-2
+       md (16px) = gap-4 / p-4 / px-4
+       lg (24px) = gap-6 / p-6
+       xl (48px) = gap-12 / p-12
+     No theme override needed here; documented for reference only. */
+
+  /* Z-index scale — see "Floating Sheet" in DESIGN.md */
+  --z-index-dropdown: 100;
+  --z-index-sticky: 200;
+  --z-index-modal-backdrop: 300;
+  --z-index-modal: 400;
+  --z-index-toast: 500;
+  --z-index-tooltip: 600;
+
+  /* Motion — see "Buttons" Named Rules in DESIGN.md */
+  --ease-out-quart: cubic-bezier(0.165, 0.84, 0.44, 1);
+}
