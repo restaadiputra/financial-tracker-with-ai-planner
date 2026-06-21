@@ -53,6 +53,11 @@ export interface Budget {
   period: 'monthly'; // v1: monthly only — see PRD Section 5.3 SIMPLICITY NOTE.
   alertThresholdPct: number; // e.g. 80 — overspend warning fires at this % spent.
   createdAt: number;
+  // Set when this budget was created/adjusted via a confirmed AI Planner proposal —
+  // shared with the Goal created in the same confirm action so the planner's
+  // TrackedPlanWidget can find the whole batch. Provenance only, not a lock —
+  // editing the budget manually afterward keeps it. See PRD Section 6 / AI Planner spec.
+  aiPlanBatchId?: string;
 }
 
 // Decrypted shape of a recurring rule (subscriptions / recurring income) — see PRD Section 5.4.
@@ -83,6 +88,9 @@ export interface Goal {
   targetDate?: number;
   linkedCategoryId?: string; // optional: auto-derive progress from this category's transactions.
   createdAt: number;
+  // Set when this goal was created via a confirmed AI Planner proposal — see the
+  // matching field on Budget above for the full rationale.
+  aiPlanBatchId?: string;
 }
 
 // Decrypted shape of a manual asset/liability snapshot feeding net worth — see PRD Section 5.6.
