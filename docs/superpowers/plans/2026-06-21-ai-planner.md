@@ -1278,7 +1278,7 @@ git commit -m "feat: add planner ChatPanel component"
 
 **Interfaces:**
 - Consumes: `ProposedPlan` from `lib/ai/planSchema.ts` (Task 4).
-- Produces: `ConfirmedSelection` type (`{ goal: boolean; budgetAdjustmentIndexes: number[] }`), `PlanConfirmCard` component with props `{ plan: ProposedPlan; categoryNameById: Map<string, string>; onConfirm: (selection: ConfirmedSelection) => void; onDismiss: () => void }` — consumed by Task 14 (planner page).
+- Produces: `ConfirmedSelection` type (`{ goal: boolean; budgetAdjustmentIndexes: number[] }`), `PlanConfirmCard` component with props `{ plan: ProposedPlan; categoryNameById: Map<string, string>; categoryCurrencyById: Map<string, string>; onConfirm: (selection: ConfirmedSelection) => void; onDismiss: () => void }` — consumed by Task 14 (planner page). `categoryCurrencyById` lets every budget-adjustment line render with `formatMoney` instead of a bare number, since `ProposedPlan.budgetAdjustments` carries no currency of its own (PRD 5.7 per-currency clarity) — Task 14 computes it with the same logic it uses for the actual write.
 
 - [ ] **Step 1: Write the component**
 
@@ -1304,11 +1304,18 @@ export interface ConfirmedSelection {
 export function PlanConfirmCard({
   plan,
   categoryNameById,
+  categoryCurrencyById,
   onConfirm,
   onDismiss,
 }: {
   plan: ProposedPlan;
   categoryNameById: Map<string, string>;
+  // Resolved currency per categoryId, computed by the caller using the same
+  // logic that will decide the actual write (existing budget's currency, else
+  // spending history, else a fallback) — proposedPlan.budgetAdjustments has no
+  // currency field of its own (PRD 5.7: no auto currency conversion, so every
+  // amount must carry a real currency, never a bare number).
+  categoryCurrencyById: Map<string, string>;
   onConfirm: (selection: ConfirmedSelection) => void;
   onDismiss: () => void;
 }) {
@@ -1361,7 +1368,7 @@ export function PlanConfirmCard({
           />
           <span className="text-body text-foreground">
             Set {categoryNameById.get(adj.categoryId) ?? adj.categoryId} budget to{' '}
-            <strong>{adj.suggestedAmount.toLocaleString()}</strong>
+            <strong>{formatMoney(categoryCurrencyById.get(adj.categoryId) ?? '', adj.suggestedAmount)}</strong>
           </span>
         </label>
       ))}
@@ -1670,6 +1677,20 @@ export default function PlannerPage() {
     return map;
   }, [categories]);
 
+  // Resolved currency per categoryId for whatever budget adjustments are
+  // currently proposed — computed with the exact same logic handleConfirmPlan
+  // uses for the real write, so PlanConfirmCard never shows a currency that
+  // could differ from what actually gets saved.
+  const categoryCurrencyById = useMemo(() => {
+    const map = new Map<string, string>();
+    if (!pendingPlan) return map;
+    const context = buildPlanContext(transactions, budgets, goals);
+    for (const adj of pendingPlan.budgetAdjustments ?? []) {
+      map.set(adj.categoryId, resolveCurrencyForCategory(adj.categoryId, budgets, context, pendingPlan.currency));
+    }
+    return map;
+  }, [pendingPlan, transactions, budgets, goals]);
+
   async function callPlanApi(message: string, history: ChatTurn[]): Promise<AIPlannerResponse> {
     const context = buildPlanContext(transactions, budgets, goals);
     const response = await fetch('/api/ai/plan', {
@@ -1787,6 +1808,7 @@ export default function PlannerPage() {
         <PlanConfirmCard
           plan={pendingPlan}
           categoryNameById={categoryNameById}
+          categoryCurrencyById={categoryCurrencyById}
           onConfirm={handleConfirmPlan}
           onDismiss={() => setPendingPlan(null)}
         />
@@ -1858,6 +1880,294 @@ to:
 ```bash
 git add CLAUDE.md
 git commit -m "docs: mark Phase 3 (AI Planner) as implemented"
+```
+
+---
+
+### Task 16 (post-implementation fix): Derive AI-goal progress from net savings, not `goalProgress`
+
+**Why this exists:** The final whole-branch review found that `TrackedPlanWidget` used `goalProgress(goal, transactions)` for AI-confirmed goals. `goalProgress` is a Phase 2 concept: it returns the goal's static `currentAmount` unless `linkedCategoryId` is set (PRD 5.5, manual-entry default). The AI Planner never sets `linkedCategoryId` and always writes `currentAmount: 0`, so the progress bar was permanently stuck at 0% for every AI-confirmed goal — the widget's core promise ("live progress," PRD 6.3) didn't hold for the only goals it ever displays. PRD Section 6.3 actually specifies a different derivation for this widget: "current net savings this month (income − expenses) ... vs target" — i.e. net savings since the goal existed, not a manually-entered or category-linked number.
+
+**Files:**
+- Modify: `lib/finance/calculations.ts`
+- Test: `lib/finance/calculations.test.ts`
+- Modify: `components/planner/TrackedPlanWidget.tsx`
+
+**Interfaces:**
+- Produces: `netSavingsSince(transactions: Transaction[], currency: string, since: number, until?: number): number` — consumed by `TrackedPlanWidget`'s `GoalProgress`, replacing its use of `goalProgress`.
+
+- [ ] **Step 1: Write the failing test**
+
+Append to `lib/finance/calculations.test.ts` (add `netSavingsSince` to the existing import line, append this `describe` block at the end):
+
+```typescript
+describe('netSavingsSince', () => {
+  test('sums income minus expense, in one currency, from a start time onward', () => {
+    const since = new Date('2026-06-01').getTime();
+    const transactions = [
+      tx({ type: 'income', amount: 5_000_000, currency: 'IDR', date: new Date('2026-06-05').getTime() }),
+      tx({ type: 'expense', amount: 1_000_000, currency: 'IDR', date: new Date('2026-06-10').getTime() }),
+      tx({ type: 'income', amount: 999_999, currency: 'IDR', date: new Date('2026-05-30').getTime() }), // before `since`
+      tx({ type: 'income', amount: 50, currency: 'USD', date: new Date('2026-06-06').getTime() }), // other currency
+    ];
+    expect(netSavingsSince(transactions, 'IDR', since)).toBe(4_000_000);
+  });
+
+  test('can go negative when expenses exceed income in range', () => {
+    const since = new Date('2026-06-01').getTime();
+    const transactions = [tx({ type: 'expense', amount: 200_000, currency: 'IDR', date: new Date('2026-06-05').getTime() })];
+    expect(netSavingsSince(transactions, 'IDR', since)).toBe(-200_000);
+  });
+});
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `npx vitest run lib/finance/calculations.test.ts`
+Expected: FAIL — `netSavingsSince is not exported` / `is not a function`
+
+- [ ] **Step 3: Write the implementation**
+
+Append to `lib/finance/calculations.ts`:
+
+```typescript
+
+// Net savings (income − expense) in one currency from `since` onward — used by
+// the AI Planner's TrackedPlanWidget to derive live progress for AI-confirmed
+// goals (PRD 6.3: "current net savings ... vs target"). Unlike goalProgress
+// (Phase 2's manual-entry/linked-category model), this needs no linkedCategoryId
+// and reflects every transaction in the goal's currency since it was created.
+export function netSavingsSince(
+  transactions: Transaction[],
+  currency: string,
+  since: number,
+  until: number = Date.now()
+): number {
+  return transactions
+    .filter((t) => t.currency === currency && t.date >= since && t.date <= until)
+    .reduce((sum, t) => sum + (t.type === 'income' ? t.amount : -t.amount), 0);
+}
+```
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `npx vitest run lib/finance/calculations.test.ts`
+Expected: PASS (all existing tests + 2 new ones)
+
+- [ ] **Step 5: Update `TrackedPlanWidget` to use it**
+
+In `components/planner/TrackedPlanWidget.tsx`:
+
+Change the import line from:
+
+```typescript
+import { goalProgress, requiredDailyPace } from '@/lib/finance/calculations';
+```
+
+to:
+
+```typescript
+import { netSavingsSince, requiredDailyPace } from '@/lib/finance/calculations';
+```
+
+Change `GoalProgress`'s progress line from:
+
+```typescript
+  const progress = goalProgress(goal, transactions);
+  const pct = goal.targetAmount > 0 ? Math.min(100, Math.round((progress / goal.targetAmount) * 100)) : 0;
+```
+
+to:
+
+```typescript
+  const progress = netSavingsSince(transactions, goal.currency, goal.createdAt);
+  const pct = goal.targetAmount > 0 ? Math.max(0, Math.min(100, Math.round((progress / goal.targetAmount) * 100))) : 0;
+```
+
+(The added `Math.max(0, ...)` floor prevents a negative-savings period from rendering a negative-width progress bar — a real review finding distinct from the progress-source bug.)
+
+- [ ] **Step 6: Typecheck and run the full suite**
+
+Run: `npm run typecheck && npm test`
+Expected: no errors; all suites pass.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add lib/finance/calculations.ts lib/finance/calculations.test.ts components/planner/TrackedPlanWidget.tsx
+git commit -m "fix: derive AI-goal progress from net savings instead of goalProgress"
+```
+
+---
+
+### Task 17 (post-implementation fix): Include category names in the AI's spending-summary context
+
+**Why this exists:** The final whole-branch review found that `buildPlanContext` only ever gives the model opaque category UUIDs (`categoryId`), never names. The system prompt tells the model to echo a `categoryId` back in `budgetAdjustments`, but the model never sees what any UUID actually means — it can only blind-copy strings, with no way to reason about "which category is this really." Category names aren't financial data (PRD 5.2 — categories are stored unencrypted already), so including them costs nothing privacy-wise and meaningfully improves the model's ability to produce valid, sensible budget-adjustment proposals.
+
+**Files:**
+- Modify: `lib/ai/contextSummary.ts`
+- Test: `lib/ai/contextSummary.test.ts`
+- Modify: `app/(app)/planner/page.tsx`
+
+**Interfaces:**
+- Produces: `buildPlanContext` gains a 4th parameter, `categories: CategoryRecord[]`, inserted before the existing optional `now` parameter: `buildPlanContext(transactions: Transaction[], budgets: Budget[], goals: Goal[], categories: CategoryRecord[], now?: number): PlanContext`. `CategorySummary` gains a `categoryName: string` field (falls back to the raw `categoryId` if no matching category record is found, so a deleted/missing category never produces a missing field).
+
+- [ ] **Step 1: Write the failing test**
+
+In `lib/ai/contextSummary.test.ts`, add `CategoryRecord` to the type import from `@/lib/db/schema`, and update both existing test calls to `buildPlanContext` to pass a `categories` array as the new 4th argument (before `now`):
+
+Change:
+```typescript
+import type { Budget, Goal, Transaction } from '@/lib/db/schema';
+```
+to:
+```typescript
+import type { Budget, CategoryRecord, Goal, Transaction } from '@/lib/db/schema';
+```
+
+In the first test (`'aggregates income/expense...'`), change:
+```typescript
+    const context = buildPlanContext(transactions, [], [], now);
+```
+to:
+```typescript
+    const categories: CategoryRecord[] = [
+      { id: 'food', profileId: 'p1', name: 'Food', icon: 'utensils', color: '#000', type: 'expense', isDefault: true },
+      { id: 'salary', profileId: 'p1', name: 'Salary', icon: 'banknote', color: '#000', type: 'income', isDefault: true },
+    ];
+    const context = buildPlanContext(transactions, [], [], categories, now);
+```
+and update the three `toEqual` assertions in that test to include `categoryName`, e.g.:
+```typescript
+    expect(food).toEqual({ categoryId: 'food', categoryName: 'Food', currency: 'IDR', income: 0, expense: 70_000 });
+```
+(apply the matching `categoryName` to the `salary` and `foodUsd` assertions too — `salary` → `'Salary'`, `foodUsd` → `'Food'`).
+
+In the second test (`'passes through budgets and goals...'`), change:
+```typescript
+    const context = buildPlanContext([], budgets, goals, Date.now());
+```
+to:
+```typescript
+    const context = buildPlanContext([], budgets, goals, [], Date.now());
+```
+(empty `categories` array — that test isn't exercising category names, and an empty array must still produce a usable fallback, which the next case covers explicitly.)
+
+Then add one new test to the same `describe` block:
+```typescript
+  test('falls back to the raw categoryId when no matching category record exists', () => {
+    const context = buildPlanContext(
+      [tx({ category: 'ghost-category', currency: 'IDR' })],
+      [],
+      [],
+      [] // no category records at all
+    );
+    expect(context.categorySummaries[0].categoryName).toBe('ghost-category');
+  });
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `npx vitest run lib/ai/contextSummary.test.ts`
+Expected: FAIL — wrong number of arguments / `categoryName` missing from the equality check.
+
+- [ ] **Step 3: Write the implementation**
+
+In `lib/ai/contextSummary.ts`, add the import and update the types and function:
+
+Change:
+```typescript
+import type { Budget, Goal, Transaction } from '@/lib/db/schema';
+```
+to:
+```typescript
+import type { Budget, CategoryRecord, Goal, Transaction } from '@/lib/db/schema';
+```
+
+Change `CategorySummary` to:
+```typescript
+export interface CategorySummary {
+  categoryId: string;
+  categoryName: string;
+  currency: string;
+  income: number;
+  expense: number;
+}
+```
+
+Change the function signature and body:
+```typescript
+export function buildPlanContext(
+  transactions: Transaction[],
+  budgets: Budget[],
+  goals: Goal[],
+  categories: CategoryRecord[],
+  now: number = Date.now()
+): PlanContext {
+  const periodStart = now - CONTEXT_WINDOW_MS;
+  const periodEnd = now;
+
+  const categoryNameById = new Map(categories.map((c) => [c.id, c.name]));
+
+  const byKey = new Map<string, CategorySummary>();
+  for (const t of transactions) {
+    if (t.date < periodStart || t.date > periodEnd) continue;
+    const key = `${t.category}::${t.currency}`;
+    const existing = byKey.get(key) ?? {
+      categoryId: t.category,
+      categoryName: categoryNameById.get(t.category) ?? t.category,
+      currency: t.currency,
+      income: 0,
+      expense: 0,
+    };
+    if (t.type === 'income') existing.income += t.amount;
+    else existing.expense += t.amount;
+    byKey.set(key, existing);
+  }
+
+  return {
+    periodStart,
+    periodEnd,
+    categorySummaries: Array.from(byKey.values()),
+    budgets: budgets.map((b) => ({
+      categoryId: b.categoryId,
+      amount: b.amount,
+      currency: b.currency,
+      alertThresholdPct: b.alertThresholdPct,
+    })),
+    goals: goals.map((g) => ({
+      name: g.name,
+      type: g.type,
+      targetAmount: g.targetAmount,
+      currentAmount: g.currentAmount,
+      currency: g.currency,
+      targetDate: g.targetDate,
+    })),
+  };
+}
+```
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `npx vitest run lib/ai/contextSummary.test.ts`
+Expected: PASS (3 tests — 2 updated + 1 new)
+
+- [ ] **Step 5: Update the three call sites in the planner page**
+
+In `app/(app)/planner/page.tsx`, every call to `buildPlanContext(transactions, budgets, goals)` (there are three: inside `callPlanApi`, inside `handleConfirmPlan`, and inside the `categoryCurrencyById` `useMemo`) must become `buildPlanContext(transactions, budgets, goals, categories ?? [])`. `categories` is already fetched on this page via `useLiveQuery` (used to build `categoryNameById`), so no new data fetch is needed — just pass it through.
+
+Also add `categories` to the dependency array of the `categoryCurrencyById` `useMemo` (it reads `categories` transitively now via `buildPlanContext`).
+
+- [ ] **Step 6: Typecheck, lint, and run the full suite**
+
+Run: `npm run typecheck && npm run lint && npm test`
+Expected: no errors; all suites pass.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add lib/ai/contextSummary.ts lib/ai/contextSummary.test.ts "app/(app)/planner/page.tsx"
+git commit -m "fix: include category names in AI Planner context for reliable proposals"
 ```
 
 ---
