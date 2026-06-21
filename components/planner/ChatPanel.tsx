@@ -37,8 +37,8 @@ export function ChatPanel({
       <div className="flex flex-col gap-3 rounded-card border border-border bg-surface p-6">
         {messages.length === 0 && (
           <p className="text-body text-muted">
-            Tell me a savings goal or ask how your budgets are doing — for example, "I want to save
-            10 million rupiah this month."
+            Tell me a savings goal or ask how your budgets are doing — for example, &ldquo;I want to save
+            10 million rupiah this month.&rdquo;
           </p>
         )}
         {messages.map((m) => (
