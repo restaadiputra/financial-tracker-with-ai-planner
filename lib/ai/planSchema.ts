@@ -17,10 +17,34 @@ export interface AIPlannerResponse {
   proposedPlan?: ProposedPlan;
 }
 
+// Strips a leading/trailing markdown code fence. Each side is stripped
+// independently (not one matched pair) because a truncated model response —
+// cut off by the token limit before it could close its fence — has an opening
+// ```json with no closing ``` at all; requiring both would leave the fence
+// markers in the text that falls through to the fail-open path below.
 function stripCodeFence(raw: string): string {
-  const trimmed = raw.trim();
-  const match = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
-  return match ? match[1] : trimmed;
+  return raw
+    .trim()
+    .replace(/^```(?:json)?\s*/, '')
+    .replace(/\s*```$/, '')
+    .trim();
+}
+
+// Best-effort recovery of the "message" field's string value when the
+// response isn't valid JSON at all — typically because it was truncated
+// mid-string (no closing quote) or mid-object (no closing brace). Without
+// this, a truncated reply renders as a raw, half-finished JSON blob instead of
+// the readable prose the model was actually writing.
+function extractMessageFallback(text: string): string | null {
+  const match = text.match(/"message"\s*:\s*"((?:[^"\\]|\\.)*)/);
+  if (!match) return null;
+  try {
+    return JSON.parse(`"${match[1]}"`);
+  } catch {
+    // The captured text itself ends mid-escape-sequence (e.g. a dangling
+    // backslash) — return it as-is rather than the original fenced/JSON text.
+    return match[1];
+  }
 }
 
 function isValidBudgetAdjustment(value: unknown): value is BudgetAdjustment {
@@ -58,5 +82,6 @@ export function parsePlannerResponse(raw: string): AIPlannerResponse {
   } catch {
     // fall through to fail-open below
   }
-  return { message: raw, proposedPlan: undefined };
+  const recoveredMessage = extractMessageFallback(candidate);
+  return { message: recoveredMessage ?? raw, proposedPlan: undefined };
 }

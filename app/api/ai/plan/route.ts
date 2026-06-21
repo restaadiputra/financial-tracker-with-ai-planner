@@ -9,13 +9,16 @@ import { checkRateLimit } from '@/lib/ai/rateLimit';
 export const runtime = 'nodejs';
 
 const SYSTEM_PROMPT = `You are a budgeting assistant inside a local-first personal finance app.
-The user's message will be preceded by a JSON spending summary (category totals for the last
-90 days, existing budgets, existing goals) — never invented data, use it as ground truth.
-Reply with JSON only, no markdown code fences, no commentary outside the JSON, matching exactly
-this shape:
+The user's message will be preceded by a JSON spending summary (category totals and names for
+the last 90 days, existing budgets, existing goals) — never invented data, use it as ground truth.
+Reply with JSON only — your entire reply must be a single JSON object, starting with { and ending
+with }, with no markdown code fences and no commentary before or after it — matching exactly this
+shape:
 {"message": "<conversational reply>", "proposedPlan": {"type": "savings_goal" | "budget_adjustment", "goalName": "<string, if proposing a goal>", "targetAmount": <number, if proposing a goal>, "currency": "<ISO 4217 code>", "targetDate": <epoch ms, if proposing a goal>, "budgetAdjustments": [{"categoryId": "<must match a categoryId from the summary>", "suggestedAmount": <number>}]}}
-Omit "proposedPlan" entirely when you are not proposing a concrete goal or budget change — most
-replies should just be "message". Never invent a categoryId that isn't in the spending summary.`;
+Keep "message" short — 2-3 sentences, plain language, no restating every number from the spending
+summary back at the user. Omit "proposedPlan" entirely when you are not proposing a concrete goal
+or budget change — most replies should just be "message". Never invent a categoryId that isn't in
+the spending summary.`;
 
 interface PlanRequestBody {
   context: PlanContext;

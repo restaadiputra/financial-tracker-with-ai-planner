@@ -6,7 +6,7 @@
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 const ANTHROPIC_VERSION = '2023-06-01';
 const MODEL = 'claude-haiku-4-5-20251001';
-const MAX_TOKENS = 1024;
+const MAX_TOKENS = 2048;
 
 export interface ChatTurn {
   role: 'user' | 'assistant';
