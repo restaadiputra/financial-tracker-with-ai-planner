@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Wallet, Repeat, Target } from 'lucide-react';
+import { LayoutDashboard, Wallet, Repeat, Target, Sparkles } from 'lucide-react';
 import { ProfileMenu } from './ProfileMenu';
 
 const LINKS = [
@@ -10,6 +10,7 @@ const LINKS = [
   { href: '/budgets', label: 'Budgets', icon: Wallet },
   { href: '/recurring', label: 'Recurring', icon: Repeat },
   { href: '/goals', label: 'Goals', icon: Target },
+  { href: '/planner', label: 'Planner', icon: Sparkles },
 ] as const;
 
 export function AppNav() {
