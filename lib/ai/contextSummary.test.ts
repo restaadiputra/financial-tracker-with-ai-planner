@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import type { Budget, Goal, Transaction } from '@/lib/db/schema';
+import type { Budget, CategoryRecord, Goal, Transaction } from '@/lib/db/schema';
 import { buildPlanContext } from './contextSummary';
 
 const DAY_MS = 86_400_000;
@@ -29,16 +29,20 @@ describe('buildPlanContext', () => {
       tx({ amount: 99_999, category: 'food', currency: 'IDR', date: now - 91 * DAY_MS }), // outside window
     ];
 
-    const context = buildPlanContext(transactions, [], [], now);
+    const categories: CategoryRecord[] = [
+      { id: 'food', profileId: 'p1', name: 'Food', icon: 'utensils', color: '#000', type: 'expense', isDefault: true },
+      { id: 'salary', profileId: 'p1', name: 'Salary', icon: 'banknote', color: '#000', type: 'income', isDefault: true },
+    ];
+    const context = buildPlanContext(transactions, [], [], categories, now);
 
     const food = context.categorySummaries.find((c) => c.categoryId === 'food' && c.currency === 'IDR');
-    expect(food).toEqual({ categoryId: 'food', currency: 'IDR', income: 0, expense: 70_000 });
+    expect(food).toEqual({ categoryId: 'food', categoryName: 'Food', currency: 'IDR', income: 0, expense: 70_000 });
 
     const salary = context.categorySummaries.find((c) => c.categoryId === 'salary');
-    expect(salary).toEqual({ categoryId: 'salary', currency: 'IDR', income: 5_000_000, expense: 0 });
+    expect(salary).toEqual({ categoryId: 'salary', categoryName: 'Salary', currency: 'IDR', income: 5_000_000, expense: 0 });
 
     const foodUsd = context.categorySummaries.find((c) => c.categoryId === 'food' && c.currency === 'USD');
-    expect(foodUsd).toEqual({ categoryId: 'food', currency: 'USD', income: 0, expense: 10 });
+    expect(foodUsd).toEqual({ categoryId: 'food', categoryName: 'Food', currency: 'USD', income: 0, expense: 10 });
 
     // the 91-day-old transaction must not appear in any bucket's totals
     expect(context.categorySummaries.reduce((sum, c) => sum + c.expense, 0)).toBe(70_010);
@@ -52,7 +56,7 @@ describe('buildPlanContext', () => {
       { id: 'g1', name: 'Laptop', type: 'savings', targetAmount: 10_000_000, currentAmount: 2_000_000, currency: 'IDR', createdAt: 0 },
     ];
 
-    const context = buildPlanContext([], budgets, goals, Date.now());
+    const context = buildPlanContext([], budgets, goals, [], Date.now());
 
     expect(context.budgets).toEqual([
       { categoryId: 'food', amount: 1_000_000, currency: 'IDR', alertThresholdPct: 80 },
@@ -60,5 +64,15 @@ describe('buildPlanContext', () => {
     expect(context.goals).toEqual([
       { name: 'Laptop', type: 'savings', targetAmount: 10_000_000, currentAmount: 2_000_000, currency: 'IDR', targetDate: undefined },
     ]);
+  });
+
+  test('falls back to the raw categoryId when no matching category record exists', () => {
+    const context = buildPlanContext(
+      [tx({ category: 'ghost-category', currency: 'IDR' })],
+      [],
+      [],
+      [] // no category records at all
+    );
+    expect(context.categorySummaries[0].categoryName).toBe('ghost-category');
   });
 });

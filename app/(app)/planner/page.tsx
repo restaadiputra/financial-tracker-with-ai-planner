@@ -80,15 +80,15 @@ export default function PlannerPage() {
   const categoryCurrencyById = useMemo(() => {
     const map = new Map<string, string>();
     if (!pendingPlan) return map;
-    const context = buildPlanContext(transactions, budgets, goals);
+    const context = buildPlanContext(transactions, budgets, goals, categories ?? []);
     for (const adj of pendingPlan.budgetAdjustments ?? []) {
       map.set(adj.categoryId, resolveCurrencyForCategory(adj.categoryId, budgets, context, pendingPlan.currency));
     }
     return map;
-  }, [pendingPlan, transactions, budgets, goals]);
+  }, [pendingPlan, transactions, budgets, goals, categories]);
 
   async function callPlanApi(message: string, history: ChatTurn[]): Promise<AIPlannerResponse> {
-    const context = buildPlanContext(transactions, budgets, goals);
+    const context = buildPlanContext(transactions, budgets, goals, categories ?? []);
     const response = await fetch('/api/ai/plan', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -127,7 +127,7 @@ export default function PlannerPage() {
   async function handleConfirmPlan(selection: ConfirmedSelection) {
     if (!pendingPlan) return;
     const batchId = crypto.randomUUID();
-    const context = buildPlanContext(transactions, budgets, goals);
+    const context = buildPlanContext(transactions, budgets, goals, categories ?? []);
 
     if (selection.goal && pendingPlan.goalName && pendingPlan.targetAmount !== undefined) {
       await goalStore.add(db, key, profileId, {

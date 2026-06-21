@@ -1,7 +1,8 @@
-import type { Budget, Goal, Transaction } from '@/lib/db/schema';
+import type { Budget, CategoryRecord, Goal, Transaction } from '@/lib/db/schema';
 
 export interface CategorySummary {
   categoryId: string;
+  categoryName: string;
   currency: string;
   income: number;
   expense: number;
@@ -42,10 +43,13 @@ export function buildPlanContext(
   transactions: Transaction[],
   budgets: Budget[],
   goals: Goal[],
+  categories: CategoryRecord[],
   now: number = Date.now()
 ): PlanContext {
   const periodStart = now - CONTEXT_WINDOW_MS;
   const periodEnd = now;
+
+  const categoryNameById = new Map(categories.map((c) => [c.id, c.name]));
 
   const byKey = new Map<string, CategorySummary>();
   for (const t of transactions) {
@@ -53,6 +57,7 @@ export function buildPlanContext(
     const key = `${t.category}::${t.currency}`;
     const existing = byKey.get(key) ?? {
       categoryId: t.category,
+      categoryName: categoryNameById.get(t.category) ?? t.category,
       currency: t.currency,
       income: 0,
       expense: 0,
