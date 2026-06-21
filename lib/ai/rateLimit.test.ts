@@ -7,7 +7,7 @@ beforeEach(() => {
 
 describe('checkRateLimit', () => {
   test('allows requests up to the limit within a window', () => {
-    let now = 0;
+    const now = 0;
     for (let i = 0; i < 10; i++) {
       expect(checkRateLimit('1.2.3.4', now).allowed).toBe(true);
     }
