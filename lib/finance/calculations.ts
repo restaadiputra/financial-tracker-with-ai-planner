@@ -76,3 +76,19 @@ export function requiredDailyPace(
   const daysRemaining = Math.max(1, Math.ceil((targetDate - now) / 86_400_000));
   return remaining / daysRemaining;
 }
+
+// Net savings (income − expense) in one currency from `since` onward — used by
+// the AI Planner's TrackedPlanWidget to derive live progress for AI-confirmed
+// goals (PRD 6.3: "current net savings ... vs target"). Unlike goalProgress
+// (Phase 2's manual-entry/linked-category model), this needs no linkedCategoryId
+// and reflects every transaction in the goal's currency since it was created.
+export function netSavingsSince(
+  transactions: Transaction[],
+  currency: string,
+  since: number,
+  until: number = Date.now()
+): number {
+  return transactions
+    .filter((t) => t.currency === currency && t.date >= since && t.date <= until)
+    .reduce((sum, t) => sum + (t.type === 'income' ? t.amount : -t.amount), 0);
+}

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { AssetLiabilitySnapshot, Goal, Transaction } from '@/lib/db/schema';
-import { currentMonthRange, goalProgress, netWorthByCurrency, requiredDailyPace, spentInCategory } from './calculations';
+import { currentMonthRange, goalProgress, netSavingsSince, netWorthByCurrency, requiredDailyPace, spentInCategory } from './calculations';
 
 function tx(partial: Partial<Transaction>): Transaction {
   return {
@@ -97,5 +97,24 @@ describe('requiredDailyPace', () => {
     const now = new Date('2026-06-20T12:00:00').getTime();
     const targetDate = new Date('2026-06-20T08:00:00').getTime(); // already past
     expect(requiredDailyPace(1_000_000, 0, targetDate, now)).toBe(1_000_000);
+  });
+});
+
+describe('netSavingsSince', () => {
+  test('sums income minus expense, in one currency, from a start time onward', () => {
+    const since = new Date('2026-06-01').getTime();
+    const transactions = [
+      tx({ type: 'income', amount: 5_000_000, currency: 'IDR', date: new Date('2026-06-05').getTime() }),
+      tx({ type: 'expense', amount: 1_000_000, currency: 'IDR', date: new Date('2026-06-10').getTime() }),
+      tx({ type: 'income', amount: 999_999, currency: 'IDR', date: new Date('2026-05-30').getTime() }), // before `since`
+      tx({ type: 'income', amount: 50, currency: 'USD', date: new Date('2026-06-06').getTime() }), // other currency
+    ];
+    expect(netSavingsSince(transactions, 'IDR', since)).toBe(4_000_000);
+  });
+
+  test('can go negative when expenses exceed income in range', () => {
+    const since = new Date('2026-06-01').getTime();
+    const transactions = [tx({ type: 'expense', amount: 200_000, currency: 'IDR', date: new Date('2026-06-05').getTime() })];
+    expect(netSavingsSince(transactions, 'IDR', since)).toBe(-200_000);
   });
 });

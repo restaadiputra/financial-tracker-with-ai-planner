@@ -2,7 +2,7 @@
 
 import type { Budget, Goal, Transaction } from '@/lib/db/schema';
 import { findLatestPlanBatch } from '@/lib/ai/planBatch';
-import { goalProgress, requiredDailyPace } from '@/lib/finance/calculations';
+import { netSavingsSince, requiredDailyPace } from '@/lib/finance/calculations';
 import { formatMoney } from '@/lib/finance/format';
 
 function daysRemaining(targetDate: number, now: number = Date.now()): number {
@@ -50,8 +50,8 @@ export function TrackedPlanWidget({
 }
 
 function GoalProgress({ goal, transactions }: { goal: Goal; transactions: Transaction[] }) {
-  const progress = goalProgress(goal, transactions);
-  const pct = goal.targetAmount > 0 ? Math.min(100, Math.round((progress / goal.targetAmount) * 100)) : 0;
+  const progress = netSavingsSince(transactions, goal.currency, goal.createdAt);
+  const pct = goal.targetAmount > 0 ? Math.max(0, Math.min(100, Math.round((progress / goal.targetAmount) * 100))) : 0;
 
   return (
     <div className="flex flex-col gap-2">
