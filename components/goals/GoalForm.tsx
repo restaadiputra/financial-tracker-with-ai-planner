@@ -3,6 +3,8 @@
 import { useId, useState } from 'react';
 import type { CategoryRecord, Goal } from '@/lib/db/schema';
 import { Sheet } from '@/components/ui/Sheet';
+import { AmountInput } from '@/components/ui/AmountInput';
+import { FormError, RequiredMark } from '@/components/ui/form';
 import { fieldClass, primaryButton, secondaryButton } from '@/components/ui/controls';
 
 export type GoalFormValues = Omit<Goal, 'id' | 'createdAt'>;
@@ -25,10 +27,8 @@ export function GoalForm({
 }) {
   const [name, setName] = useState(initialValues?.name ?? '');
   const [type, setType] = useState<'savings' | 'debt_payoff'>(initialValues?.type ?? 'savings');
-  const [targetAmount, setTargetAmount] = useState(initialValues ? String(initialValues.targetAmount) : '');
-  const [currentAmount, setCurrentAmount] = useState(
-    initialValues ? String(initialValues.currentAmount) : '0'
-  );
+  const [targetAmount, setTargetAmount] = useState<number | null>(initialValues?.targetAmount ?? null);
+  const [currentAmount, setCurrentAmount] = useState<number | null>(initialValues?.currentAmount ?? 0);
   const [currency, setCurrency] = useState(initialValues?.currency ?? 'IDR');
   const [targetDate, setTargetDate] = useState(
     initialValues?.targetDate ? toDateInputValue(initialValues.targetDate) : ''
@@ -37,22 +37,21 @@ export function GoalForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const titleId = useId();
+  const errorId = useId();
 
   const linked = linkedCategoryId !== '';
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    const parsedTarget = Number(targetAmount);
-    const parsedCurrent = Number(currentAmount);
     if (!name.trim()) {
       setError('Give your goal a name.');
       return;
     }
-    if (!Number.isFinite(parsedTarget) || parsedTarget <= 0) {
+    if (targetAmount === null || targetAmount <= 0) {
       setError('Enter a target greater than zero.');
       return;
     }
-    if (!linked && (!Number.isFinite(parsedCurrent) || parsedCurrent < 0)) {
+    if (!linked && (currentAmount === null || currentAmount < 0)) {
       setError('Enter a current amount of zero or more.');
       return;
     }
@@ -61,9 +60,9 @@ export function GoalForm({
     await onSubmit({
       name: name.trim(),
       type,
-      targetAmount: parsedTarget,
+      targetAmount,
       // When linked, progress is derived from transactions, so manual amount is moot.
-      currentAmount: linked ? 0 : parsedCurrent,
+      currentAmount: linked ? 0 : (currentAmount ?? 0),
       currency,
       targetDate: targetDate ? new Date(targetDate).getTime() : undefined,
       linkedCategoryId: linked ? linkedCategoryId : undefined,
@@ -91,7 +90,7 @@ export function GoalForm({
                 type="button"
                 onClick={() => setType(value)}
                 aria-pressed={type === value}
-                className={`flex-1 rounded-control border px-3 py-2.5 text-label transition-colors duration-150 ease-out-quart ${
+                className={`flex-1 min-h-11 rounded-control border px-3 py-2.5 text-label transition-colors duration-150 ease-out-quart ${
                   type === value
                     ? 'border-accent bg-accent text-accent-foreground hover:bg-accent-hover active:bg-accent-active'
                     : 'border-border text-muted hover:border-accent hover:text-foreground active:bg-surface-hover'
@@ -103,12 +102,16 @@ export function GoalForm({
           </div>
 
           <label className="flex flex-col gap-1 text-label">
-            Name
+            <span>
+              Name
+              <RequiredMark />
+            </span>
             <input
               required
               autoFocus
               value={name}
               onChange={(e) => setName(e.target.value)}
+              maxLength={60}
               placeholder="e.g. New laptop, Pay off credit card"
               className={fieldClass}
             />
@@ -116,22 +119,30 @@ export function GoalForm({
 
           <div className="flex gap-2">
             <label className="flex flex-1 flex-col gap-1 text-label">
-              Target amount
-              <input
+              <span>
+                Target amount
+                <RequiredMark />
+              </span>
+              <AmountInput
                 required
-                inputMode="decimal"
-                value={targetAmount}
-                onChange={(e) => setTargetAmount(e.target.value)}
+                initialValue={initialValues?.targetAmount}
+                onValueChange={setTargetAmount}
+                aria-invalid={error != null && (targetAmount === null || targetAmount <= 0)}
+                aria-describedby={error ? errorId : undefined}
                 className={`${fieldClass} tabular-nums`}
               />
             </label>
             <label className="flex w-24 flex-col gap-1 text-label">
-              Currency
+              <span>
+                Currency
+                <RequiredMark />
+              </span>
               <input
                 required
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value.toUpperCase())}
                 maxLength={3}
+                aria-label="Currency code, 3 letters"
                 className={`${fieldClass} uppercase`}
               />
             </label>
@@ -166,16 +177,16 @@ export function GoalForm({
           {!linked && (
             <label className="flex flex-col gap-1 text-label">
               Current amount saved
-              <input
-                inputMode="decimal"
-                value={currentAmount}
-                onChange={(e) => setCurrentAmount(e.target.value)}
+              <AmountInput
+                key={initialValues?.id ?? 'new'}
+                initialValue={initialValues?.currentAmount ?? 0}
+                onValueChange={setCurrentAmount}
                 className={`${fieldClass} tabular-nums`}
               />
             </label>
           )}
 
-          {error && <p className="text-label text-danger">{error}</p>}
+          {error && <FormError id={errorId}>{error}</FormError>}
         </div>
 
         <div className="sticky bottom-0 flex gap-2 border-t border-border bg-background px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">

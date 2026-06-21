@@ -19,6 +19,7 @@ export function ProfileMenu() {
 
   if (!activeProfile) return null;
   const initial = activeProfile.displayName.slice(0, 1).toUpperCase();
+  const firstName = activeProfile.displayName.split(' ')[0];
 
   return (
     <>
@@ -27,10 +28,14 @@ export function ProfileMenu() {
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
         aria-expanded={open}
+        aria-label={`Profile menu for ${activeProfile.displayName}`}
         className="flex items-center gap-2 rounded-control border border-border bg-surface py-1.5 pl-1.5 pr-2.5 transition-colors duration-150 ease-out-quart hover:border-accent active:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-sm font-semibold text-accent-foreground">
           {initial}
+        </span>
+        <span className="max-w-[5rem] truncate text-label font-medium sm:hidden">
+          {firstName}
         </span>
         <span className="hidden max-w-[10rem] truncate text-label font-medium sm:inline">
           {activeProfile.displayName}
@@ -70,7 +75,7 @@ export function ProfileMenu() {
                     role="radio"
                     aria-checked={selected}
                     onClick={() => setTheme(opt.value)}
-                    className={`flex flex-col items-center gap-1.5 rounded-[6px] px-2 py-2.5 text-label transition-colors duration-150 ease-out-quart focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+                    className={`flex min-h-11 flex-col items-center justify-center gap-1.5 rounded-[6px] px-2 py-2.5 text-label transition-colors duration-150 ease-out-quart focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
                       selected
                         ? 'bg-accent text-accent-foreground'
                         : 'text-muted hover:bg-surface-hover hover:text-foreground'

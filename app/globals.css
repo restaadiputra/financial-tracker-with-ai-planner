@@ -7,6 +7,19 @@ body {
   font-family: var(--font-sans), "Inter", system-ui, sans-serif;
 }
 
+/* Tailwind's preflight resets the browser's default button cursor; restore it
+   globally instead of adding `cursor-pointer` to every button one by one. */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
+  button:disabled,
+  [role='button'][aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+}
+
 /* ---------------------------------------------------------------------- */
 /* Overlay primitive (components/ui/Sheet.tsx).                           */
 /* One responsive surface for every modal/popover: a bottom sheet on      */

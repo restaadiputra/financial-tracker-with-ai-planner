@@ -107,6 +107,12 @@ export function Sheet({
       ? 'bg-foreground/20 backdrop-blur-sm sm:bg-transparent sm:backdrop-blur-none'
       : 'bg-foreground/20 backdrop-blur-sm';
 
+  // SIMPLICITY NOTE: panel width is capped (320px menu / 448px modal) instead of
+  // scaling up on wide desktop viewports. Every form here collects a handful of
+  // fields (amount, category, date, note) — a single focused column, not a dense
+  // dashboard — so a wider panel would add empty space, not utility. Deliberately
+  // not responsive beyond mobile vs. everything-else. Revisit only if a future
+  // form needs multi-column layout (none currently do).
   const panelWidth = variant === 'menu' ? 'w-full sm:w-80' : 'w-full sm:max-w-md';
 
   return createPortal(

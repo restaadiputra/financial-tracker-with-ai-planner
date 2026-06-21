@@ -56,6 +56,11 @@ export default function DashboardPage() {
   const txList = transactions ?? [];
 
   return (
+    // SIMPLICITY NOTE: page width is capped at max-w-2xl (672px) on every
+    // viewport, including wide desktop, rather than widening into a multi-column
+    // dashboard. This is a single chronological transaction list, not a dense
+    // dashboard — a narrow centered column keeps it calm and readable instead of
+    // stretching list rows across a 1440px monitor for no added utility.
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-10">
       <header>
         <p className="text-label text-muted">Welcome back</p>
@@ -118,7 +123,7 @@ export default function DashboardPage() {
                       </button>
                       <button
                         onClick={() => setConfirmingDelete(t.id)}
-                        className="rounded-control px-2 py-1.5 text-label text-muted transition-colors duration-150 ease-out-quart hover:bg-surface-hover hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger"
+                        className="inline-flex min-h-11 items-center justify-center rounded-control px-2 py-1.5 text-label text-muted transition-colors duration-150 ease-out-quart hover:bg-surface-hover hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger"
                       >
                         Delete
                       </button>

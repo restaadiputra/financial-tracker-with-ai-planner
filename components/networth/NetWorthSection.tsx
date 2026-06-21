@@ -102,7 +102,7 @@ export function NetWorthSection({
                       </button>
                       <button
                         onClick={() => handleDelete(s.id)}
-                        className="rounded-control px-2 py-1.5 text-label font-medium text-danger transition-colors duration-150 ease-out-quart hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger"
+                        className="inline-flex min-h-11 items-center justify-center rounded-control px-2 py-1.5 text-label font-medium text-danger transition-colors duration-150 ease-out-quart hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger"
                       >
                         Delete
                       </button>
@@ -114,7 +114,7 @@ export function NetWorthSection({
                       </button>
                       <button
                         onClick={() => setConfirmingDelete(s.id)}
-                        className="rounded-control px-2 py-1.5 text-label text-muted transition-colors duration-150 ease-out-quart hover:bg-surface-hover hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger"
+                        className="inline-flex min-h-11 items-center justify-center rounded-control px-2 py-1.5 text-label text-muted transition-colors duration-150 ease-out-quart hover:bg-surface-hover hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger"
                       >
                         Delete
                       </button>

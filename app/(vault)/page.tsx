@@ -4,6 +4,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useVault } from '@/lib/vault/VaultContext';
 import type { Profile } from '@/lib/db/schema';
+import { PasswordInput } from '@/components/ui/PasswordInput';
+import { FormError } from '@/components/ui/form';
+import { fieldClass as inputClass, ghostButton, primaryButton } from '@/components/ui/controls';
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function VaultPage() {
   const { profiles, activeProfile, unlock } = useVault();
@@ -102,7 +107,7 @@ function UnlockForm({
   return (
     <main className="flex min-h-full flex-1 flex-col items-center justify-center px-4 py-10 sm:px-6 sm:py-16">
       <form onSubmit={handleSubmit} className="flex w-full max-w-sm flex-col gap-4">
-        <button type="button" onClick={onBack} className="self-start text-label text-muted transition-colors duration-150 ease-out-quart hover:text-foreground active:text-foreground/70">
+        <button type="button" onClick={onBack} className={`self-start -ml-2 ${ghostButton}`}>
           &larr; Back
         </button>
 
@@ -110,21 +115,21 @@ function UnlockForm({
 
         <label className="flex flex-col gap-1 text-label">
           Password
-          <input
-            type="password"
+          <PasswordInput
             autoFocus
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="rounded-control border border-border bg-background px-3 py-2.5 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className={inputClass}
           />
         </label>
 
-        {error && <p className="text-label text-danger">{error}</p>}
+        {error && <FormError>{error}</FormError>}
 
         <button
           type="submit"
           disabled={submitting || password.length === 0}
-          className="mt-2 rounded-control bg-accent px-4 py-2.5 font-medium text-accent-foreground transition-colors duration-150 ease-out-quart hover:bg-accent-hover active:bg-accent-active disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          className={`mt-2 ${primaryButton}`}
         >
           {submitting ? 'Unlocking…' : 'Unlock'}
         </button>
@@ -147,6 +152,10 @@ function CreateProfileForm({ onCancel }: { onCancel: () => void }) {
     event.preventDefault();
     setError(null);
 
+    if (!EMAIL_PATTERN.test(email)) {
+      setError('Enter a valid email address.');
+      return;
+    }
     if (password !== confirmPassword) {
       setError('Passwords don’t match.');
       return;
@@ -165,8 +174,8 @@ function CreateProfileForm({ onCancel }: { onCancel: () => void }) {
 
   return (
     <main className="flex min-h-full flex-1 flex-col items-center justify-center px-4 py-10 sm:px-6 sm:py-16">
-      <form onSubmit={handleSubmit} className="flex w-full max-w-sm flex-col gap-4">
-        <button type="button" onClick={onCancel} className="self-start text-label text-muted transition-colors duration-150 ease-out-quart hover:text-foreground active:text-foreground/70">
+      <form onSubmit={handleSubmit} noValidate className="flex w-full max-w-sm flex-col gap-4">
+        <button type="button" onClick={onCancel} className={`self-start -ml-2 ${ghostButton}`}>
           &larr; Back
         </button>
 
@@ -184,7 +193,9 @@ function CreateProfileForm({ onCancel }: { onCancel: () => void }) {
             required
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            className="rounded-control border border-border bg-background px-3 py-2.5 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            maxLength={255}
+            autoComplete="name"
+            className={inputClass}
           />
         </label>
 
@@ -195,38 +206,40 @@ function CreateProfileForm({ onCancel }: { onCancel: () => void }) {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="rounded-control border border-border bg-background px-3 py-2.5 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            maxLength={254}
+            autoComplete="email"
+            className={inputClass}
           />
         </label>
 
         <label className="flex flex-col gap-1 text-label">
           Password
-          <input
+          <PasswordInput
             required
-            type="password"
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="rounded-control border border-border bg-background px-3 py-2.5 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className={inputClass}
           />
         </label>
 
         <label className="flex flex-col gap-1 text-label">
           Confirm password
-          <input
+          <PasswordInput
             required
-            type="password"
+            autoComplete="new-password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="rounded-control border border-border bg-background px-3 py-2.5 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className={inputClass}
           />
         </label>
 
-        {error && <p className="text-label text-danger">{error}</p>}
+        {error && <FormError>{error}</FormError>}
 
         <button
           type="submit"
           disabled={submitting}
-          className="mt-2 rounded-control bg-accent px-4 py-2.5 font-medium text-accent-foreground transition-colors duration-150 ease-out-quart hover:bg-accent-hover active:bg-accent-active disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          className={`mt-2 ${primaryButton}`}
         >
           {submitting ? 'Creating…' : 'Create profile'}
         </button>
