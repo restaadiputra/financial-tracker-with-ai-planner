@@ -94,6 +94,9 @@ export default function PlannerPage() {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ context, message, history }),
     });
+    if (!response.ok) {
+      throw new Error(`AI planner request failed: ${response.status}`);
+    }
     return response.json();
   }
 
