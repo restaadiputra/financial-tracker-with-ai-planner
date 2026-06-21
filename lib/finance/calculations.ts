@@ -61,3 +61,18 @@ export function goalProgress(goal: Goal, transactions: Transaction[]): number {
     .filter((t) => t.category === goal.linkedCategoryId && t.currency === goal.currency)
     .reduce((sum, t) => sum + t.amount, 0);
 }
+
+// Daily amount still needed to hit a goal by targetDate, from today (PRD Section
+// 6.3 "Required daily/weekly pace"). Days remaining is floored at 1 so an overdue
+// or same-day target gives a real number instead of dividing by zero or going
+// negative — the UI should show "you need X today", not an error.
+export function requiredDailyPace(
+  targetAmount: number,
+  currentAmount: number,
+  targetDate: number,
+  now: number = Date.now()
+): number {
+  const remaining = targetAmount - currentAmount;
+  const daysRemaining = Math.max(1, Math.ceil((targetDate - now) / 86_400_000));
+  return remaining / daysRemaining;
+}

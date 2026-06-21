@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { AssetLiabilitySnapshot, Goal, Transaction } from '@/lib/db/schema';
-import { currentMonthRange, goalProgress, netWorthByCurrency, spentInCategory } from './calculations';
+import { currentMonthRange, goalProgress, netWorthByCurrency, requiredDailyPace, spentInCategory } from './calculations';
 
 function tx(partial: Partial<Transaction>): Transaction {
   return {
@@ -83,5 +83,19 @@ describe('goalProgress', () => {
       tx({ type: 'income', amount: 50, currency: 'USD', category: 'savings-cat' }), // wrong currency
     ];
     expect(goalProgress(linked, transactions)).toBe(1_500_000);
+  });
+});
+
+describe('requiredDailyPace', () => {
+  test('divides the remaining amount by whole days remaining', () => {
+    const now = new Date('2026-06-20').getTime();
+    const targetDate = new Date('2026-06-30').getTime(); // 10 days out
+    expect(requiredDailyPace(10_000_000, 4_000_000, targetDate, now)).toBe(600_000);
+  });
+
+  test('floors days remaining at 1 so an overdue/today target does not divide by zero or go negative', () => {
+    const now = new Date('2026-06-20T12:00:00').getTime();
+    const targetDate = new Date('2026-06-20T08:00:00').getTime(); // already past
+    expect(requiredDailyPace(1_000_000, 0, targetDate, now)).toBe(1_000_000);
   });
 });
