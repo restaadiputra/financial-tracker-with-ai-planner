@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Phases 1–2 are implemented — Phase 1 (local vault + core transaction tracking) and Phase 2 (budget envelopes, recurring rules with lazy on-load generation, goals, derived net worth). See `app/`, `lib/`, and `components/`. Build/lint/test commands:
+Phases 1–3 are implemented — Phase 1 (local vault + core transaction tracking), Phase 2 (budget envelopes, recurring rules with lazy on-load generation, goals, derived net worth), and Phase 3 (AI planner chat, stateless `/api/ai/plan` route, tracked-plan widget). See `app/`, `lib/`, and `components/`. Build/lint/test commands:
 
 - `npm run dev` / `npm run build` / `npm run start`
 - `npm run lint` — ESLint
 - `npm run typecheck` — `tsc --noEmit`
 - `npm test` — Vitest (unit tests for `lib/crypto`, `lib/db`, `lib/vault`)
 
-No environment variables are required yet. Phase 3 (AI planner) will need `ANTHROPIC_API_KEY`; Phase 6 (cloud backup) will need Supabase keys — none of that exists yet, do not add API routes or env var reads until those phases start.
+`ANTHROPIC_API_KEY` is required for the AI planner (`/api/ai/plan`) — set it in `.env.local`, never commit it. Phase 6 (cloud backup) will need Supabase keys — that phase hasn't started yet, do not add Supabase imports or env var reads until it does.
 
 ## What this project is
 
