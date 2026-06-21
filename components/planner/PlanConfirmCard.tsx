@@ -17,11 +17,20 @@ export interface ConfirmedSelection {
 export function PlanConfirmCard({
   plan,
   categoryNameById,
+  categoryCurrencyById,
   onConfirm,
   onDismiss,
 }: {
   plan: ProposedPlan;
   categoryNameById: Map<string, string>;
+  // Maps each category ID to the currency it will be saved in — resolved by
+  // Task 14 (planner page) using the same logic as the real DB write (existing
+  // budget currency, else most-common spend currency, else fallback) so the
+  // confirm screen always shows the currency that will actually be saved.
+  // This is required because BudgetAdjustment in the proposed plan has no
+  // currency field, but every amount on screen must carry its currency
+  // (PRD 5.7, DESIGN.md).
+  categoryCurrencyById: Map<string, string>;
   onConfirm: (selection: ConfirmedSelection) => void;
   onDismiss: () => void;
 }) {
@@ -74,7 +83,7 @@ export function PlanConfirmCard({
           />
           <span className="text-body text-foreground">
             Set {categoryNameById.get(adj.categoryId) ?? adj.categoryId} budget to{' '}
-            <strong>{adj.suggestedAmount.toLocaleString()}</strong>
+            <strong>{formatMoney(categoryCurrencyById.get(adj.categoryId) ?? '', adj.suggestedAmount)}</strong>
           </span>
         </label>
       ))}
